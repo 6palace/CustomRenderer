@@ -24,7 +24,7 @@ func main() {
 
 	// draw african head
 	lightDir := r3.Vector{X: 0, Y: 0, Z: -1.0}
-	obj, err := util.NewModel("african_head.obj")
+	obj, err := util.NewModel("resources/african_head.obj")
 	// texture, err := util.LoadTexture("african_head_diffuse.tga")
 	if err != nil {
 		panic(err)
@@ -56,7 +56,7 @@ func main() {
 			finalRes.VecTriangle(p0, p1, p2, color.NRGBA{uint8tensity, uint8tensity, uint8tensity, 255})
 		}
 	}
-	util.DrawFile(finalRes.I, "output.png")
+	util.DrawFile(finalRes.I, "out/output.png")
 
 	zIndexMap := util.InitImage(width, height, clear)
 	for i := 0; i < width; i++ {
@@ -66,6 +66,6 @@ func main() {
 			}
 		}
 	}
-	util.DrawFile(zIndexMap, "zmap.png")
+	util.DrawFile(zIndexMap, "out/zmap.png")
 
 }
