@@ -1,10 +1,11 @@
 package customrenderer
 
 import (
-	"helloWorld/util"
 	"image"
 	"image/color"
 	"math"
+
+	"github.com/6palace/CustomRenderer/util"
 
 	"github.com/golang/geo/r2"
 	"github.com/golang/geo/r3"

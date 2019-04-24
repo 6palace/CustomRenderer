@@ -1,0 +1,27 @@
+{
+	"ImportPath": "github.com/6palace/CustomRenderer",
+	"GoVersion": "go1.11",
+	"GodepVersion": "v80",
+	"Deps": [
+		{
+			"ImportPath": "github.com/ftrvxmtrx/tga",
+			"Rev": "bd8e8d5be13a2bda61c29a47ca41ecc8f20ee731"
+		},
+		{
+			"ImportPath": "github.com/golang/geo/r1",
+			"Rev": "476085157cff9aaeef4d4f124649436542d4114a"
+		},
+		{
+			"ImportPath": "github.com/golang/geo/r2",
+			"Rev": "476085157cff9aaeef4d4f124649436542d4114a"
+		},
+		{
+			"ImportPath": "github.com/golang/geo/r3",
+			"Rev": "476085157cff9aaeef4d4f124649436542d4114a"
+		},
+		{
+			"ImportPath": "github.com/golang/geo/s1",
+			"Rev": "476085157cff9aaeef4d4f124649436542d4114a"
+		}
+	]
+}

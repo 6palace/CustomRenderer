@@ -1,9 +1,10 @@
 package main
 
 import (
-	cr "helloWorld/customrenderer"
-	"helloWorld/util"
 	"image/color"
+
+	cr "github.com/6palace/CustomRenderer/customrenderer"
+	"github.com/6palace/CustomRenderer/util"
 
 	"github.com/golang/geo/r2"
 	"github.com/golang/geo/r3"
