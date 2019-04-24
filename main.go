@@ -5,6 +5,7 @@ import (
 	"helloWorld/util"
 	"image/color"
 
+	"github.com/golang/geo/r2"
 	"github.com/golang/geo/r3"
 )
 
@@ -25,35 +26,43 @@ func main() {
 	// draw african head
 	lightDir := r3.Vector{X: 0, Y: 0, Z: -1.0}
 	obj, err := util.NewModel("resources/african_head.obj")
-	// texture, err := util.LoadTexture("african_head_diffuse.tga")
+	texture, err := util.LoadTexture("resources/african_head_diffuse.tga")
+	util.DrawFile(texture, "temp.png")
 	if err != nil {
 		panic(err)
 	}
 	for _, face := range obj.Faces {
-		v0, v1, v2 := obj.Verts[face[0]], obj.Verts[face[1]], obj.Verts[face[2]]
-		// vt0, vt1, vt2 := obj.VTs[face[0]], obj.Verts[face[1]], obj.Verts[face[2]]
+		v0, v1, v2 := obj.Verts[face[0][0]], obj.Verts[face[0][1]], obj.Verts[face[0][2]]
+		// get lighting intensity
 		d1, d2 := v2.Sub(v0), v1.Sub(v0)
 		faceNorm := d1.Cross(d2).Normalize()
-		intensity := faceNorm.Dot(lightDir) * 255
-		uint8tensity := uint8(intensity)
+		intensity := faceNorm.Dot(lightDir)
 		if intensity > 0 {
-			// multiply z values by height to scale from float to int better
-			p0 := r3.Vector{
-				X: (v0.X + 1.0) * float64(width) / 2,
-				Y: (v0.Y + 1.0) * float64(height) / 2,
-				Z: v0.Z * float64(width),
+			textureVerts := []r2.Point{
+				obj.VTs[face[1][0]],
+				obj.VTs[face[1][1]],
+				obj.VTs[face[1][2]],
 			}
-			p1 := r3.Vector{
-				X: (v1.X + 1.0) * float64(width) / 2,
-				Y: (v1.Y + 1.0) * float64(height) / 2,
-				Z: v1.Z * float64(width),
+			// multiply z values by width to scale from float to int better
+			vertexes := []r3.Vector{
+				r3.Vector{
+					X: (v0.X + 1.0) * float64(width) / 2,
+					Y: (v0.Y + 1.0) * float64(height) / 2,
+					Z: v0.Z * float64(width),
+				},
+				r3.Vector{
+					X: (v1.X + 1.0) * float64(width) / 2,
+					Y: (v1.Y + 1.0) * float64(height) / 2,
+					Z: v1.Z * float64(width),
+				},
+				r3.Vector{
+					X: (v2.X + 1.0) * float64(width) / 2,
+					Y: (v2.Y + 1.0) * float64(height) / 2,
+					Z: v2.Z * float64(width),
+				},
 			}
-			p2 := r3.Vector{
-				X: (v2.X + 1.0) * float64(width) / 2,
-				Y: (v2.Y + 1.0) * float64(height) / 2,
-				Z: v2.Z * float64(width),
-			}
-			finalRes.VecTriangle(p0, p1, p2, color.NRGBA{uint8tensity, uint8tensity, uint8tensity, 255})
+			// finalRes.VecTriangle(vertexes, color.NRGBA{uint8tensity, uint8tensity, uint8tensity, 255})
+			finalRes.TexturedTriangle(vertexes, textureVerts, texture, intensity)
 		}
 	}
 	util.DrawFile(finalRes.I, "out/output.png")

@@ -6,6 +6,7 @@ import (
 	"image/color"
 	"math"
 
+	"github.com/golang/geo/r2"
 	"github.com/golang/geo/r3"
 )
 
@@ -33,12 +34,6 @@ func NewRenderer(width, height int) *CustomRenderer {
 	return &res
 }
 
-// Pixel is a single draw command to CustomRenderer
-type Pixel struct {
-	point image.Point
-	color color.Color
-}
-
 func barycentric(p0, p1, p2, test image.Point) r3.Vector {
 	//find cross of (01x 02x t0x) X (01y 02y t0y)
 	xPoint := r3.Vector{
@@ -52,15 +47,61 @@ func barycentric(p0, p1, p2, test image.Point) r3.Vector {
 		Z: float64(p0.Y - test.Y),
 	}
 	res := yPoint.Cross(xPoint)
-	return r3.Vector{
-		X: 1 - (res.X+res.Y)/res.Z,
-		Y: res.Y / res.Z,
-		Z: res.X / res.Z,
+	if math.Abs(res.Z) < 1 {
+		return r3.Vector{X: -1, Y: 1, Z: 1}
+	} else {
+		return r3.Vector{
+			X: 1 - (res.X+res.Y)/res.Z,
+			Y: res.Y / res.Z,
+			Z: res.X / res.Z,
+		}
+	}
+}
+
+func mapVts(vt []r2.Point, barycentricCoords r3.Vector, texture image.Image, intensity float64) color.Color {
+	textBounds := texture.Bounds()
+	mappedX := vt[0].X*barycentricCoords.X + vt[1].X*barycentricCoords.Y + vt[2].X*barycentricCoords.Z
+	mappedX = mappedX * float64(textBounds.Dx())
+	// flip coordinate system around vertically
+	mappedY := vt[0].Y*barycentricCoords.X + vt[1].Y*barycentricCoords.Y + vt[2].Y*barycentricCoords.Z
+	mappedY = (1 - mappedY) * float64(textBounds.Dx())
+	origR, origG, origB, origA := texture.At(int(mappedX), int(mappedY)).RGBA()
+	newR, newG, newB := uint8(uint32(float64(origR)*intensity)>>8), uint8(uint32(float64(origG)*intensity)>>8), uint8(uint32(float64(origB)*intensity)>>8)
+	return color.NRGBA{
+		R: newR,
+		G: newG,
+		B: newB,
+		A: uint8(origA >> 8),
+	}
+}
+
+// TexturedTriangle renders a textured triangle with zBuf
+func (rend *CustomRenderer) TexturedTriangle(v []r3.Vector, vt []r2.Point, texture image.Image, intensity float64) {
+	boundingBox := findBBox(v[0], v[1], v[2])
+
+	// ops := boundingBox.Dx() * boundingBox.Dy()
+	// sem := make(chan bool, ops)
+	for i := boundingBox.Min.X; i < boundingBox.Max.X; i++ {
+		for j := boundingBox.Min.Y; j < boundingBox.Max.Y; j++ {
+			ip0 := image.Point{int(v[0].X), int(v[0].Y)}
+			ip1 := image.Point{int(v[1].X), int(v[1].Y)}
+			ip2 := image.Point{int(v[2].X), int(v[2].Y)}
+			// currently barycentric does not take z axis into account
+			barycentricCoords := barycentric(ip0, ip1, ip2, image.Point{i, j})
+			if barycentricCoords.X < 0 || barycentricCoords.Y < 0 || barycentricCoords.Z < 0 {
+			} else {
+				zCoord := v[0].Z*barycentricCoords.X + v[1].Z*barycentricCoords.Y + v[2].Z*barycentricCoords.Z
+				rawTextureColor := mapVts(vt, barycentricCoords, texture, intensity)
+				rend.blSet(image.Point{i, j}, rawTextureColor, int(zCoord))
+			}
+
+		}
 	}
 }
 
 // VecTriangle renders a filled-in triangle with zBuf
-func (rend *CustomRenderer) VecTriangle(v0, v1, v2 r3.Vector, color color.Color) {
+func (rend *CustomRenderer) VecTriangle(vertexes []r3.Vector, color color.Color) {
+	v0, v1, v2 := vertexes[0], vertexes[1], vertexes[2]
 	boundingBox := findBBox(v0, v1, v2)
 	// ops := boundingBox.Dx() * boundingBox.Dy()
 	// sem := make(chan bool, ops)

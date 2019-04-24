@@ -21,17 +21,17 @@ func InitImage(x, y int, color color.Color) *image.NRGBA {
 }
 
 // LoadTexture takes a .tga image and loads it
-func LoadTexture(filename string) (*image.Image, error) {
+func LoadTexture(filename string) (image.Image, error) {
 	file, err := os.Open(filename)
 	texture, err := tga.Decode(file)
 	if err != nil {
 		return nil, err
 	}
-	return &texture, nil
+	return texture, nil
 }
 
 // DrawFile writes image to disk as output.png
-func DrawFile(i *image.NRGBA, filename string) {
+func DrawFile(i image.Image, filename string) {
 	fo, err := os.Create(filename)
 	// close file on exit
 	defer func() {
